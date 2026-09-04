@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atharion | Live Safety Center</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Chart.js for Timeline and Donut -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <button id="toggle-btn" class="toggle-btn" type="button">
+                <i class="fa-solid fa-chevron-left" id="toggle-icon"></i>
+            </button>
+
+            <div class="logo-box">
+                <div class="logo-mark">A</div>
+                <h2 class="logo-text">THARION</h2>
+            </div>
+
+            <nav class="nav-menu">
+                <a href="/" class="nav-item active">
+                    <i class="fa-solid fa-house"></i>
+                    <span class="nav-text">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item disabled">
+                    <i class="fa-solid fa-folder-open"></i>
+                    <span class="nav-text">Saved Files</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="main-body">
+
+            <!-- POP-UP ALERT TOAST (Top Right) -->
+            <div id="alert-toast" class="toast-popup hidden">
+                <strong>Event Captured</strong>
+            </div>
+
+            <header class="top-header">
+                <h1>Safety Observation</h1>
+            </header>
+
+            <!-- MIDDLE GRID: VIDEO (LEFT) + 2 CARDS (RIGHT) -->
+            <section class="grid-middle">
+
+                <!-- Video Container -->
+                <div class="card video-card">
+                    <div class="video-frame-wrapper">
+                        <div class="card-title-bar">
+                            <span>Stream Feed</span>
+                            <!-- <button class="fullscreen-btn" onclick="openFullscreen()">⛶</button> -->
+                        </div>
+                        <video id="stream-frame" controls autoplay loop muted>
+                            <source src="{{ url_for('static', filename='test.mp4') }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                </div>
+
+                <!-- Right Column (Stacked 2 Cards) -->
+                <div class="right-column-wrapper">
+
+                    <!-- CARD 1: VIOLATION RATIO DONUT -->
+                    <div class="card breakdown-card">
+                        <div class="card-header-sm">
+                            <h3>Violation Ratio</h3>
+                            <!-- <div class="status-badge">
+                                <span class="dot green"></span> Active
+                            </div> -->
+                        </div>
+                        <div class="donut-chart-wrapper">
+                            <canvas id="violationPieChart"></canvas>
+                        </div>
+                        <div class="pie-stats-footer">
+                            <div class="stat-pill">
+                                <span class="pill-label">Total</span>
+                                <strong id="stat-total" class="pill-val">12</strong>
+                            </div>
+                            <div class="stat-pill">
+                                <span class="pill-label">No Hardhat</span>
+                                <strong id="stat-hats" class="pill-val yellow">7</strong>
+                            </div>
+                            <div class="stat-pill">
+                                <span class="pill-label">No Vest</span>
+                                <strong id="stat-vests" class="pill-val orange">5</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CARD 2: RECENT DETECTIONS LOG -->
+                    <div class="card log-card">
+                        <div class="card-header-sm">
+                            <h3>Recent Detections</h3>
+                            <!-- <span class="log-count">Live</span> -->
+                        </div>
+                        <div class="event-list" id="event-list">
+                            <div class="event-item danger">
+                                <span class="event-desc">Missing Hardhat</span>
+                                <span class="event-time">10:42:15</span>
+                            </div>
+                            <div class="event-item warning">
+                                <span class="event-desc">Missing Safety Vest</span>
+                                <span class="event-time">10:40:02</span>
+                            </div>
+                            <div class="event-item danger">
+                                <span class="event-desc">Missing Hardhat</span>
+                                <span class="event-time">10:35:50</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- BOTTOM PANEL: TIMELINE CHART -->
+            <section class="card chart-card">
+                <h3>Alerts Timeline</h3>
+                <div class="chart-container">
+                    <canvas id="timelineChart"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+
+</html>
