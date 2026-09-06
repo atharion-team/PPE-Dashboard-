@@ -53,16 +53,37 @@
             <section class="grid-middle">
 
                 <!-- Video Container -->
-                <div class="card video-card">
-                    <div class="video-frame-wrapper">
-                        <div class="card-title-bar">
-                            <span>Stream Feed</span>
-                            <!-- <button class="fullscreen-btn" onclick="openFullscreen()">⛶</button> -->
-                        </div>
-                        <video id="stream-frame" controls autoplay loop muted>
-                            <source src="{{ url_for('static', filename='test.mp4') }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
+                <!-- Video Upload / Stream Holder Card -->
+                <div class="card video-card upload-card-container" id="video-card">
+                    <div class="card-title-bar">
+                        <span>Upload Video Stream</span>
+                    </div>
+
+                    <!-- State 1: Upload Dropzone UI -->
+                    <div id="upload-zone" class="upload-zone">
+                        <form id="upload-form" enctype="multipart/form-data">
+                            <input type="file" id="video-file-input" name="video_file"
+                                accept="video/mp4,video/x-m4v,video/*" hidden>
+
+                            <div class="drop-area" id="drop-area">
+                                <i class="fa-solid fa-file-video upload-icon"></i>
+                                <p class="drop-text">Drag video file here to upload.</p>
+                                <p class="sub-drop-text">Alternatively, you can select a file by <span
+                                        class="browse-link" id="browse-btn">clicking here</span></p>
+                                <span id="selected-file-name" class="selected-file-name"></span>
+                            </div>
+
+                            <div class="upload-actions">
+                                <span id="upload-error" class="upload-error-msg"></span>
+                                <button type="submit" id="process-btn" class="process-btn" disabled>Process</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- State 2: Active Video Player Feed (Hidden until video is uploaded & processing starts) -->
+                    <div id="active-stream-zone" class="video-frame-wrapper hidden">
+                        <img id="stream-frame" src="" alt="Video Stream Feed"
+                            style="width: 100%; height: auto; display: block; border-radius: 6px;">
                     </div>
                 </div>
 
@@ -73,25 +94,26 @@
                     <div class="card breakdown-card">
                         <div class="card-header-sm">
                             <h3>Violation Ratio</h3>
-                            <!-- <div class="status-badge">
-                                <span class="dot green"></span> Active
-                            </div> -->
                         </div>
                         <div class="donut-chart-wrapper">
                             <canvas id="violationPieChart"></canvas>
+                            <!-- EMPTY OVERLAY ADDED HERE -->
+                            <div id="donut-empty-overlay" class="chart-overlay-empty" style="display: none;">
+                                No Data
+                            </div>
                         </div>
                         <div class="pie-stats-footer">
                             <div class="stat-pill">
                                 <span class="pill-label">Total</span>
-                                <strong id="stat-total" class="pill-val">12</strong>
+                                <strong id="stat-total" class="pill-val">0</strong>
                             </div>
                             <div class="stat-pill">
                                 <span class="pill-label">No Hardhat</span>
-                                <strong id="stat-hats" class="pill-val part1">7</strong>
+                                <strong id="stat-hats" class="pill-val part1">0</strong>
                             </div>
                             <div class="stat-pill">
                                 <span class="pill-label">No Vest</span>
-                                <strong id="stat-vests" class="pill-val part2">5</strong>
+                                <strong id="stat-vests" class="pill-val part2">0</strong>
                             </div>
                         </div>
                     </div>
@@ -100,21 +122,9 @@
                     <div class="card log-card">
                         <div class="card-header-sm">
                             <h3>Recent Detections</h3>
-                            <!-- <span class="log-count">Live</span> -->
                         </div>
                         <div class="event-list" id="event-list">
-                            <div class="event-item danger">
-                                <span class="event-desc">Missing Hardhat</span>
-                                <span class="event-time">10:42:15</span>
-                            </div>
-                            <div class="event-item warning">
-                                <span class="event-desc">Missing Safety Vest</span>
-                                <span class="event-time">10:40:02</span>
-                            </div>
-                            <div class="event-item danger">
-                                <span class="event-desc">Missing Hardhat</span>
-                                <span class="event-time">10:35:50</span>
-                            </div>
+                            <!-- JavaScript will dynamically render real events OR the empty state here -->
                         </div>
                     </div>
 
@@ -126,12 +136,14 @@
                 <h3>Alerts Timeline</h3>
                 <div class="chart-container">
                     <canvas id="timelineChart"></canvas>
+                    <!-- EMPTY OVERLAY ADDED HERE -->
+                    <div id="timeline-empty-overlay" class="chart-overlay-empty" style="display: none;">
+                        Waiting for detection timeline...
+                    </div>
                 </div>
             </section>
-        </main>
-    </div>
 
-    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+            <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 
 </html>

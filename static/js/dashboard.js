@@ -49,69 +49,98 @@ const violationPieChart = new Chart(ctxPie, {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        cutout: '45%'
+        cutout: '65%'
     }
 });
 
 let lastViolationCount = 0;
 
-// 3. Mock/Fetch Stats Data Function
-function fetchStats() {
-    // Replace with your real fetch('/api/stats') endpoint when ready
-    const data = {
-        total_violations: 12,
-        missing_hats: 7,
-        missing_vests: 5,
-        timeline_data: [
-            { time: '12:00', count: 2 },
-            { time: '12:05', count: 5 },
-            { time: '12:10', count: 3 },
-            { time: '12:15', count: 8 },
-            { time: '12:20', count: 6 },
-            { time: '12:25', count: 11 }
-        ],
-        recent_events: [
-            { time: '10:42:15', type: 'danger', desc: 'Missing Hardhat' },
-            { time: '10:40:02', type: 'warning', desc: 'Missing Safety Vest' },
-            { time: '10:35:50', type: 'danger', desc: 'Missing Hardhat' }
-        ]
-    };
+// 3. Fetch Real Stats Data from Flask Backend
+// 3. Fetch Real Stats Data from Flask Backend
+async function fetchStats() {
+    try {
+        const response = await fetch('/api/stats');
+        if (!response.ok) return;
+        const data = await response.json();
 
-    // Update Text Counters
-    document.getElementById('stat-total').innerText = data.total_violations;
-    document.getElementById('stat-hats').innerText = data.missing_hats;
-    document.getElementById('stat-vests').innerText = data.missing_vests;
+        const totalViolations = data.total_violations || 0;
+        const missingHats = data.missing_hats || 0;
+        const missingVests = data.missing_vests || 0;
+        const timelineData = data.timeline_data || [];
+        const recentEvents = data.recent_events || [];
 
-    // Trigger Toast on New Violation
-    if (data.total_violations > lastViolationCount) {
-        lastViolationCount = data.total_violations;
-        triggerAlertToast();
+        // Update Text Counters
+        document.getElementById('stat-total').innerText = totalViolations;
+        document.getElementById('stat-hats').innerText = missingHats;
+        document.getElementById('stat-vests').innerText = missingVests;
+
+        // Trigger Toast on New Violation
+        if (totalViolations > lastViolationCount) {
+            lastViolationCount = totalViolations;
+            triggerAlertToast();
+        }
+
+        // --- Donut Chart Empty State ---
+        const donutOverlay = document.getElementById('donut-empty-overlay');
+        if (totalViolations === 0) {
+            violationPieChart.data.datasets[0].data = [1];
+            violationPieChart.data.datasets[0].backgroundColor = ['#2d2d2d'];
+            violationPieChart.data.datasets[0].borderColor = ['#3a3a3a'];
+            if (donutOverlay) donutOverlay.style.display = 'block';
+        } else {
+            violationPieChart.data.datasets[0].data = [missingHats, missingVests];
+            violationPieChart.data.datasets[0].backgroundColor = ['rgba(16, 131, 173, 0.5)', 'rgba(17, 178, 223, 0.5)'];
+            violationPieChart.data.datasets[0].borderColor = ['#1083ad', '#11b2df'];
+            if (donutOverlay) donutOverlay.style.display = 'none';
+        }
+        
+        // REPLACED: Added 'none' to disable full animation rebuilds on every 1-second poll
+        violationPieChart.update('none');
+
+        // --- Timeline Line Chart Empty State ---
+        const timelineOverlay = document.getElementById('timeline-empty-overlay');
+        if (timelineData.length > 0) {
+            timelineChart.data.labels = timelineData.map(item => item.time);
+            timelineChart.data.datasets[0].data = timelineData.map(item => item.count);
+            if (timelineOverlay) timelineOverlay.style.display = 'none';
+        } else {
+            timelineChart.data.labels = ['--:--'];
+            timelineChart.data.datasets[0].data = [0];
+            if (timelineOverlay) timelineOverlay.style.display = 'block';
+        }
+        
+        // REPLACED: Added 'none' here as well
+        timelineChart.update('none');
+
+        // --- Event Log Empty State ---
+        renderEventLog(recentEvents);
+
+    } catch (err) {
+        console.error("Error fetching live stats:", err);
     }
-
-    // Update Timeline Line Chart
-    if (data.timeline_data.length > 0) {
-        timelineChart.data.labels = data.timeline_data.map(item => item.time);
-        timelineChart.data.datasets[0].data = data.timeline_data.map(item => item.count);
-        timelineChart.update();
-    }
-
-    // Update Donut Chart
-    violationPieChart.data.datasets[0].data = [data.missing_hats, data.missing_vests];
-    violationPieChart.update();
-
-    // Render Event Stream Log
-    renderEventLog(data.recent_events);
 }
 
-// 4. Render Event Stream Items
+// 4. Render Event Stream Items or Empty State
 function renderEventLog(events) {
     const eventList = document.getElementById('event-list');
-    if (!eventList || !events) return;
+    if (!eventList) return;
+
+    if (!events || events.length === 0) {
+        eventList.innerHTML = `
+            <div class="empty-state">
+                <span>No violations detected yet</span>
+            </div>
+        `;
+        return;
+    }
 
     eventList.innerHTML = events.map(event => `
-        <div class="event-item ${event.type}">
-            <span class="event-time">${event.time}</span>
-            <span class="event-desc">${event.desc}</span>
+        <div class="event-item ${event.type || 'warning'}" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+            ${event.snapshot ? `<img src="${event.snapshot}" alt="Snapshot" style="width: 64px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid #333;" />` : ''}
+            <div style="display: flex; flex-direction: column;">
+                <span class="event-time" style="font-size: 0.8rem; color: #8b949e;">Event #${event.event_id || ''} at ${event.time}</span>
+                <span class="event-desc" style="font-weight: 600;">${event.desc}</span>
+            </div>
         </div>
     `).join('');
 }
@@ -125,24 +154,10 @@ function triggerAlertToast() {
     }
 }
 
-// 6. Fullscreen Video Stream Handler
-// function openFullscreen() {
-//     const streamImg = document.getElementById('stream-frame');
-//     if (streamImg) {
-//         if (streamImg.requestFullscreen) {
-//             streamImg.requestFullscreen();
-//         } else if (streamImg.webkitRequestFullscreen) {
-//             streamImg.webkitRequestFullscreen();
-//         } else if (streamImg.msRequestFullscreen) {
-//             streamImg.msRequestFullscreen();
-//         }
-//     }
-// }
-
-// 7. Polling Interval
+// 6. Polling Interval
 setInterval(fetchStats, 1000);
 
-// 8. DOM Listeners for Sidebar Toggle
+// 7. DOM Listeners for Sidebar Toggle
 document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
@@ -164,4 +179,127 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial Fetch on Load
     fetchStats();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const dropArea = document.getElementById('drop-area');
+    const fileInput = document.getElementById('video-file-input');
+    const browseBtn = document.getElementById('browse-btn');
+    const processBtn = document.getElementById('process-btn');
+    const fileNameDisplay = document.getElementById('selected-file-name');
+    const errorMsg = document.getElementById('upload-error');
+    const uploadForm = document.getElementById('upload-form');
+
+    const uploadZone = document.getElementById('upload-zone');
+    const activeStreamZone = document.getElementById('active-stream-zone');
+    const streamFrame = document.getElementById('stream-frame');
+
+    const ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
+
+    function validateAndSetFile(file) {
+        errorMsg.innerText = '';
+        
+        if (!file) {
+            processBtn.disabled = true;
+            fileNameDisplay.innerText = '';
+            return false;
+        }
+
+        const ext = file.name.split('.').pop().toLowerCase();
+        const isVideoType = file.type.startsWith('video/') || ALLOWED_EXTENSIONS.includes(ext);
+
+        if (!isVideoType) {
+            errorMsg.innerText = 'Invalid file type! Please select a valid video file.';
+            processBtn.disabled = true;
+            fileNameDisplay.innerText = '';
+            fileInput.value = '';
+            return false;
+        }
+
+        fileNameDisplay.innerText = `Selected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+        processBtn.disabled = false;
+        return true;
+    }
+
+    // Trigger file picker
+    if (browseBtn && fileInput) {
+        browseBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fileInput.click();
+        });
+        dropArea.addEventListener('click', () => fileInput.click());
+    }
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            validateAndSetFile(e.target.files[0]);
+        }
+    });
+
+    // Drag and Drop Events
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropArea.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.add('dragover');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropArea.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('dragover');
+        }, false);
+    });
+
+    dropArea.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+
+        if (files.length > 0) {
+            fileInput.files = files;
+            validateAndSetFile(files[0]);
+        }
+    });
+
+    // Process Form Submit
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const file = fileInput.files[0];
+            if (!file || !validateAndSetFile(file)) return;
+
+            processBtn.innerText = 'Uploading...';
+            processBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('video_file', file);
+
+            try {
+                const response = await fetch('/upload_video', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Switch UI from Upload Zone to Live Video Stream
+                    uploadZone.classList.add('hidden');
+                    activeStreamZone.classList.remove('hidden');
+                    streamFrame.src = "/video_feed";
+                } else {
+                    errorMsg.innerText = result.error || 'Failed to upload video.';
+                    processBtn.innerText = 'Process';
+                    processBtn.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Error uploading video to server.';
+                processBtn.innerText = 'Process';
+                processBtn.disabled = false;
+            }
+        });
+    }
 });

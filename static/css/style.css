@@ -407,3 +407,148 @@ body {
     height: 200px;
     width: 100%;
 }
+
+/* Empty & Waiting States */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    color: #6e7681;
+    text-align: center;
+    font-size: 13px;
+    gap: 8px;
+    padding: 20px 0;
+}
+
+.empty-state i {
+    font-size: 22px;
+    color: #505050;
+}
+
+.chart-overlay-empty {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    text-align: center;
+    color: #6e7681;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* Upload Card Container */
+.upload-card-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    /* height: 800px; */
+    min-height: 380px;
+}
+
+.upload-zone {
+    display: flex;
+    flex-direction: column;
+}
+
+.drop-area {
+    border: 2px dashed #444444;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    background-color: #1c1c1c;
+    cursor: pointer;
+    transition: border-color 0.25s ease, background-color 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    min-height: 320px;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+.drop-area:hover, .drop-area.dragover {
+    border-color: #ededed;
+    background-color: #2a2a2a;
+}
+
+.upload-icon {
+    font-size: 40px;
+    color: #ededed;
+    margin-bottom: 5px;
+}
+
+.drop-text {
+    font-size: 15px;
+    font-weight: bold;
+    color: #ededed;
+}
+
+.sub-drop-text {
+    font-size: 13px;
+    color: #8b949e;
+}
+
+.browse-link {
+    color: #ededed;
+    text-decoration: underline;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.selected-file-name {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #00ad74;
+    font-weight: bold;
+    word-break: break-all;
+}
+
+.upload-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.upload-error-msg {
+    color: #c9423b;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.process-btn {
+    background-color: #ededed;
+    color: #181818;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.process-btn:hover:not(:disabled) {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.process-btn:disabled {
+    background-color: #383838;
+    color: #707070;
+    cursor: not-allowed;
+}
+
+.hidden {
+    display: none !important;
+}
