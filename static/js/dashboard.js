@@ -40,9 +40,9 @@ const violationPieChart = new Chart(ctxPie, {
         labels: ['No Hardhat', 'No Vest'],
         datasets: [{
             data: [0, 0],
-            backgroundColor: ['#1083ad', '#11b2df'],
-            borderColor: '#242424',
-            borderWidth: 2
+            backgroundColor: ['rgba(16, 131, 173, 0.5)', 'rgba(17, 178, 223, 0.5)'],
+            borderColor: ['#1083ad', '#11b2df'],
+            borderWidth: 3
         }]
     },
     options: {
