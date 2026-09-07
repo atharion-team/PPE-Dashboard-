@@ -52,11 +52,14 @@
             <!-- MIDDLE GRID: VIDEO (LEFT) + 2 CARDS (RIGHT) -->
             <section class="grid-middle">
 
-                <!-- Video Container -->
-                <!-- Video Upload / Stream Holder Card -->
+                <!-- Video Container Card -->
                 <div class="card video-card upload-card-container" id="video-card">
                     <div class="card-title-bar">
-                        <span>Upload Video Stream</span>
+                        <span id="video-card-title">Upload Video Stream</span>
+                        <!-- New Reset Button when video is finished -->
+                        <button id="reset-upload-btn" class="reset-btn hidden" type="button">
+                            <i class="fa-solid fa-rotate-left"></i> New Video
+                        </button>
                     </div>
 
                     <!-- State 1: Upload Dropzone UI -->
@@ -80,10 +83,19 @@
                         </form>
                     </div>
 
-                    <!-- State 2: Active Video Player Feed (Hidden until video is uploaded & processing starts) -->
+                    <!-- State 2: Processing / Loading Indicator -->
+                    <div id="processing-loader-zone" class="processing-zone hidden">
+                        <i class="fa-solid fa-spinner fa-spin loader-icon"></i>
+                        <p class="processing-title">Running Compliance & PPE Pipeline...</p>
+                        <p class="processing-subtext">Tracking subjects, blurring facial features, and analyzing safety violations.</p>
+                    </div>
+
+                    <!-- State 3: Processed Video Player (H.264 MP4 Output) -->
                     <div id="active-stream-zone" class="video-frame-wrapper hidden">
-                        <img id="stream-frame" src="" alt="Video Stream Feed"
-                            style="width: 100%; height: auto; display: block; border-radius: 6px;">
+                        <video id="processed-video-player" controls preload="metadata" style="width: 100%; height: auto; display: block; border-radius: 6px;">
+                            <source id="video-source" src="" type="video/mp4">
+                            Your browser does not support HTML5 video playback.
+                        </video>
                     </div>
                 </div>
 
@@ -97,8 +109,7 @@
                         </div>
                         <div class="donut-chart-wrapper">
                             <canvas id="violationPieChart"></canvas>
-                            <!-- EMPTY OVERLAY ADDED HERE -->
-                            <div id="donut-empty-overlay" class="chart-overlay-empty" style="display: none;">
+                            <div id="donut-empty-overlay" class="chart-overlay-empty">
                                 No Data
                             </div>
                         </div>
@@ -124,7 +135,7 @@
                             <h3>Recent Detections</h3>
                         </div>
                         <div class="event-list" id="event-list">
-                            <!-- JavaScript will dynamically render real events OR the empty state here -->
+                            <!-- Populated dynamically by JavaScript -->
                         </div>
                     </div>
 
@@ -136,14 +147,15 @@
                 <h3>Alerts Timeline</h3>
                 <div class="chart-container">
                     <canvas id="timelineChart"></canvas>
-                    <!-- EMPTY OVERLAY ADDED HERE -->
-                    <div id="timeline-empty-overlay" class="chart-overlay-empty" style="display: none;">
+                    <div id="timeline-empty-overlay" class="chart-overlay-empty">
                         Waiting for detection timeline...
                     </div>
                 </div>
             </section>
+        </main>
+    </div>
 
-            <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 
 </html>
