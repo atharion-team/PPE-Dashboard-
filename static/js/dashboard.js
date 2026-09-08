@@ -1,153 +1,267 @@
 // ==========================================
-// 1. Chart.js Initialization
-// ==========================================
-
-// Timeline Line Chart
-const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
-const timelineChart = new Chart(ctxTimeline, {
-    type: 'line',
-    data: {
-        labels: [],
-        datasets: [{
-            label: 'Total Alerts',
-            data: [],
-            borderColor: '#dab00a',
-            backgroundColor: 'rgba(218, 176, 10, 0.15)',
-            fill: true,
-            tension: 0.3,
-            borderWidth: 2
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-            x: { 
-                grid: { color: '#21262d' },
-                ticks: { color: '#8b949e' }
-            },
-            y: { 
-                beginAtZero: true, 
-                grid: { color: '#21262d' },
-                ticks: { color: '#8b949e', stepSize: 1 }
-            }
-        },
-        plugins: { legend: { display: false } }
-    }
-});
-
-// Violation Ratio Donut Chart
-const ctxPie = document.getElementById('violationPieChart').getContext('2d');
-const violationPieChart = new Chart(ctxPie, {
-    type: 'doughnut',
-    data: {
-        labels: ['No Hardhat', 'No Vest'],
-        datasets: [{
-            data: [0, 0],
-            backgroundColor: ['rgba(16, 131, 173, 0.5)', 'rgba(17, 178, 223, 0.5)'],
-            borderColor: ['#1083ad', '#11b2df'],
-            borderWidth: 3
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        cutout: '65%'
-    }
-});
-
-// ==========================================
-// 2. UI Update Functions
-// ==========================================
-
-function updateDashboardUI(data) {
-    const stats = data.stats || {};
-    const totalViolations = stats.total_violations || 0;
-    const missingHats = stats.missing_hats || 0;
-    const missingVests = stats.missing_vests || 0;
-    const timelineData = data.timeline_data || [];
-    const events = data.events || stats.recent_events || [];
-
-    // Update Text Counters
-    document.getElementById('stat-total').innerText = totalViolations;
-    document.getElementById('stat-hats').innerText = missingHats;
-    document.getElementById('stat-vests').innerText = missingVests;
-
-    // Toast Alert
-    if (totalViolations > 0) {
-        triggerAlertToast();
-    }
-
-    // Update Donut Chart
-    const donutOverlay = document.getElementById('donut-empty-overlay');
-    if (totalViolations === 0) {
-        violationPieChart.data.datasets[0].data = [1];
-        violationPieChart.data.datasets[0].backgroundColor = ['#2d2d2d'];
-        violationPieChart.data.datasets[0].borderColor = ['#3a3a3a'];
-        if (donutOverlay) donutOverlay.style.display = 'block';
-    } else {
-        violationPieChart.data.datasets[0].data = [missingHats, missingVests];
-        violationPieChart.data.datasets[0].backgroundColor = ['rgba(16, 131, 173, 0.5)', 'rgba(17, 178, 223, 0.5)'];
-        violationPieChart.data.datasets[0].borderColor = ['#1083ad', '#11b2df'];
-        if (donutOverlay) donutOverlay.style.display = 'none';
-    }
-    violationPieChart.update('none');
-
-    // Update Timeline Chart
-    const timelineOverlay = document.getElementById('timeline-empty-overlay');
-    if (timelineData.length > 0) {
-        timelineChart.data.labels = timelineData.map(item => item.time);
-        timelineChart.data.datasets[0].data = timelineData.map(item => item.count);
-        if (timelineOverlay) timelineOverlay.style.display = 'none';
-    } else {
-        timelineChart.data.labels = ['--:--'];
-        timelineChart.data.datasets[0].data = [0];
-        if (timelineOverlay) timelineOverlay.style.display = 'block';
-    }
-    timelineChart.update('none');
-
-    // Render Recent Log Events
-    renderEventLog(events);
-}
-
-function renderEventLog(events) {
-    const eventList = document.getElementById('event-list');
-    if (!eventList) return;
-
-    if (!events || events.length === 0) {
-        eventList.innerHTML = `
-            <div class="empty-state" style="padding: 12px; color: #8b949e; text-align: center;">
-                <span>No violations detected in video</span>
-            </div>
-        `;
-        return;
-    }
-
-    eventList.innerHTML = events.map(event => `
-        <div class="event-item ${event.type || 'warning'}" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-            ${event.snapshot ? `<img src="${event.snapshot}" alt="Snapshot" style="width: 64px; height: 48px; object-op: cover; border-radius: 4px; border: 1px solid #333;" />` : ''}
-            <div style="display: flex; flex-direction: column;">
-                <span class="event-time" style="font-size: 0.8rem; color: #8b949e;">Event #${event.event_id || ''} at ${event.time}</span>
-                <span class="event-desc" style="font-weight: 600;">${event.desc}</span>
-            </div>
-        </div>
-    `).join('');
-}
-
-function triggerAlertToast() {
-    const toast = document.getElementById('alert-toast');
-    if (toast) {
-        toast.classList.remove('hidden');
-        setTimeout(() => { toast.classList.add('hidden'); }, 3500);
-    }
-}
-
-// ==========================================
-// 3. Event Listeners & Drag-Drop Handling
+// 1. Wait for DOM and Chart.js to be ready
 // ==========================================
 
 document.addEventListener('DOMContentLoaded', () => {
+
+    console.log('DOM ready – initializing charts');
+
+    // --- Timeline Line Chart (empty state with fake grey data) ---
+    const ctxTimeline = document.getElementById('timelineChart').getContext('2d');
+    const timelineChart = new Chart(ctxTimeline, {
+        type: 'line',
+        data: {
+            labels: ['10:00', '10:01', '10:02', '10:03', '10:04'],
+            datasets: [{
+                label: 'Total Alerts',
+                data: [2, 3, 1, 4, 2],
+                borderColor: '#999999',
+                backgroundColor: 'rgba(150,150,150,0.2)',
+                fill: true,
+                tension: 0.3,
+                borderWidth: 2,
+                pointRadius: 3,
+                pointBackgroundColor: '#999999'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { 
+                    grid: { color: '#21262d' },
+                    ticks: { color: '#8b949e' }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    grid: { color: '#21262d' },
+                    ticks: { color: '#8b949e', stepSize: 1 }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            hover: { mode: null }
+        }
+    });
+    console.log('Timeline chart created');
+
+    // --- Violation Ratio Donut Chart (empty state with 3 grey slices) ---
+    const ctxPie = document.getElementById('violationPieChart').getContext('2d');
+    const violationPieChart = new Chart(ctxPie, {
+        type: 'doughnut',
+        data: {
+            labels: ['No Hardhat', 'No Vest', 'Other'],
+            datasets: [{
+                data: [70, 20, 10],
+                backgroundColor: ['#666666', '#777777', '#888888'],
+                borderColor: ['#444444', '#444444', '#444444'],
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            },
+            cutout: '65%',
+            hover: { mode: null }
+        }
+    });
+    console.log('Donut chart created');
+
+    // ==========================================
+    // 2. Apply empty-state styling & overlays
+    // ==========================================
+
+    function applyEmptyState(processing = false) {
+        const donutWrapper = document.querySelector('.donut-chart-wrapper');
+        const timelineWrapper = document.querySelector('.chart-container');
+        const donutOverlay = document.getElementById('donut-empty-overlay');
+        const timelineOverlay = document.getElementById('timeline-empty-overlay');
+
+        // Always add no-data class (grey/blur) when empty or processing
+        if (donutWrapper) donutWrapper.classList.add('no-data');
+        if (timelineWrapper) timelineWrapper.classList.add('no-data');
+
+        const msg = processing ? 'Processing' : 'No data to display. Upload a video to start.';
+
+        if (donutOverlay) {
+            donutOverlay.style.display = 'block';
+            donutOverlay.innerHTML = processing
+                ? `Processing<span class="dots" style="display:inline;font-size:inherit;"><span>.</span><span>.</span><span>.</span></span>`
+                : msg;
+        }
+        if (timelineOverlay) {
+            timelineOverlay.style.display = 'block';
+            timelineOverlay.innerHTML = processing
+                ? `Processing<span class="dots" style="display:inline;font-size:inherit;"><span>.</span><span>.</span><span>.</span></span>`
+                : msg;
+        }
+    }
+
+    // Initial empty state (not processing)
+    applyEmptyState(false);
+
+    // ==========================================
+    // 3. UI Update Function (called when real data arrives)
+    // ==========================================
+
+    window.updateDashboardUI = function(data) {
+        console.log('updateDashboardUI called with data:', data);
+        const stats = data.stats || {};
+        const totalViolations = stats.total_violations || 0;
+        const missingHats = stats.missing_hats || 0;
+        const missingVests = stats.missing_vests || 0;
+        const timelineData = data.timeline_data || [];
+        const events = data.events || stats.recent_events || [];
+
+        // Update counters
+        document.getElementById('stat-total').innerText = totalViolations;
+        document.getElementById('stat-hats').innerText = missingHats;
+        document.getElementById('stat-vests').innerText = missingVests;
+
+        if (totalViolations > 0) {
+            triggerAlertToast();
+        }
+
+        // Show/hide snapshot button based on events having snapshots
+        const snapshotBtn = document.getElementById('snapshot-gallery-btn');
+        if (snapshotBtn) {
+            const hasSnapshots = events.some(e => e.snapshot);
+            if (hasSnapshots) {
+                snapshotBtn.classList.remove('hidden');
+            } else {
+                snapshotBtn.classList.add('hidden');
+            }
+        }
+
+        // --- Donut ---
+        const donutWrapper = document.querySelector('.donut-chart-wrapper');
+        const donutOverlay = document.getElementById('donut-empty-overlay');
+        if (totalViolations === 0) {
+            violationPieChart.data.datasets[0].data = [70, 20, 10];
+            violationPieChart.data.datasets[0].backgroundColor = ['#666666', '#777777', '#888888'];
+            violationPieChart.data.datasets[0].borderColor = ['#444444', '#444444', '#444444'];
+            violationPieChart.options.plugins.tooltip.enabled = false;
+            violationPieChart.options.hover.mode = null;
+            if (donutOverlay) {
+                donutOverlay.style.display = 'block';
+                donutOverlay.innerText = 'No data to display. Upload a video to start.';
+            }
+            if (donutWrapper) donutWrapper.classList.add('no-data');
+        } else {
+            violationPieChart.data.datasets[0].data = [missingHats, missingVests];
+            violationPieChart.data.datasets[0].backgroundColor = ['rgba(16, 131, 173, 0.5)', 'rgba(17, 178, 223, 0.5)'];
+            violationPieChart.data.datasets[0].borderColor = ['#1083ad', '#11b2df'];
+            violationPieChart.options.plugins.tooltip.enabled = true;
+            violationPieChart.options.hover.mode = 'index';
+            if (donutOverlay) donutOverlay.style.display = 'none';
+            if (donutWrapper) donutWrapper.classList.remove('no-data');
+        }
+        violationPieChart.update('none');
+
+        // --- Timeline ---
+        const timelineWrapper = document.querySelector('.chart-container');
+        const timelineOverlay = document.getElementById('timeline-empty-overlay');
+        if (timelineData.length > 0) {
+            timelineChart.data.labels = timelineData.map(item => item.time);
+            timelineChart.data.datasets[0].data = timelineData.map(item => item.count);
+            timelineChart.data.datasets[0].borderColor = '#dab00a';
+            timelineChart.data.datasets[0].backgroundColor = 'rgba(218, 176, 10, 0.15)';
+            timelineChart.data.datasets[0].pointBackgroundColor = '#dab00a';
+            timelineChart.options.plugins.tooltip.enabled = true;
+            timelineChart.options.hover.mode = 'index';
+            if (timelineOverlay) timelineOverlay.style.display = 'none';
+            if (timelineWrapper) timelineWrapper.classList.remove('no-data');
+        } else {
+            timelineChart.data.labels = ['10:00', '10:01', '10:02', '10:03', '10:04'];
+            timelineChart.data.datasets[0].data = [2, 3, 1, 4, 2];
+            timelineChart.data.datasets[0].borderColor = '#999999';
+            timelineChart.data.datasets[0].backgroundColor = 'rgba(150,150,150,0.2)';
+            timelineChart.data.datasets[0].pointBackgroundColor = '#999999';
+            timelineChart.options.plugins.tooltip.enabled = false;
+            timelineChart.options.hover.mode = null;
+            if (timelineOverlay) {
+                timelineOverlay.style.display = 'block';
+                timelineOverlay.innerText = 'No data to display. Upload a video to start.';
+            }
+            if (timelineWrapper) timelineWrapper.classList.add('no-data');
+        }
+        timelineChart.update('none');
+
+        renderEventLog(events, false);
+    };
+
+    // ==========================================
+    // 4. Render Event Log & Toast
+    // ==========================================
+
+    function renderEventLog(events, processing = false) {
+        const eventList = document.getElementById('event-list');
+        if (!eventList) return;
+
+        if (processing) {
+            eventList.innerHTML = `
+                <div class="placeholder-log" style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 120px;">
+                    <span class="processing-text" style="font-size: 20px; color: #b0b0b0;">
+                        Processing
+                        <span class="dots"><span>.</span><span>.</span><span>.</span></span>
+                    </span>
+                </div>
+            `;
+            return;
+        }
+
+        if (!events || events.length === 0) {
+            // Show placeholder items with overlay message
+            eventList.innerHTML = `
+                <div class="placeholder-log" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+                    <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
+                        <span class="event-time" style="color: #666; font-family: monospace;">--:--</span>
+                        <span class="event-desc" style="color: #888;">Sample detection</span>
+                    </div>
+                    <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
+                        <span class="event-time" style="color: #666; font-family: monospace;">--:--</span>
+                        <span class="event-desc" style="color: #888;">Sample detection</span>
+                    </div>
+                    <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
+                        <span class="event-time" style="color: #666; font-family: monospace;">--:--</span>
+                        <span class="event-desc" style="color: #888;">Sample detection</span>
+                    </div>
+                    <div class="log-empty-overlay">No data to display. Upload a video to start.</div>
+                </div>
+            `;
+            return;
+        }
+
+        // Real events – render normally
+        eventList.innerHTML = events.map(event => `
+            <div class="event-item ${event.type || 'warning'}" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                ${event.snapshot ? `<img src="${event.snapshot}" alt="Snapshot" style="width: 64px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid #333;" />` : ''}
+                <div style="display: flex; flex-direction: column;">
+                    <span class="event-time" style="font-size: 0.8rem; color: #8b949e;">Event #${event.event_id || ''} at ${event.time}</span>
+                    <span class="event-desc" style="font-weight: 600;">${event.desc}</span>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function triggerAlertToast() {
+        const toast = document.getElementById('alert-toast');
+        if (toast) {
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 3500);
+        }
+    }
+
+    // ==========================================
+    // 5. Event Listeners & Drag-Drop
+    // ==========================================
+
     // Sidebar Toggle
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
@@ -180,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeStreamZone = document.getElementById('active-stream-zone');
     const processedVideoPlayer = document.getElementById('processed-video-player');
     const resetUploadBtn = document.getElementById('reset-upload-btn');
+    const snapshotBtn = document.getElementById('snapshot-gallery-btn');
 
     const ALLOWED_EXTENSIONS = ['mp4', 'avi', 'mov', 'mkv', 'webm'];
 
@@ -207,7 +322,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return true;
     }
 
-    // File Picker Triggers
     if (browseBtn && fileInput) {
         browseBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -222,7 +336,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Drag-and-Drop Effects
     ['dragenter', 'dragover'].forEach(eventName => {
         dropArea.addEventListener(eventName, (e) => {
             e.preventDefault();
@@ -247,16 +360,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Form Processing (Batch Request)
+    // Snapshot gallery button – open new tab with snapshots page
+    if (snapshotBtn) {
+        snapshotBtn.addEventListener('click', () => {
+            window.open('/snapshots', '_blank');
+        });
+    }
+
+    // Reset button – call reset endpoint and reset UI
+    if (resetUploadBtn) {
+        resetUploadBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('/reset', { method: 'POST' });
+                if (response.ok) {
+                    resetUploadUI();
+                    // Reset charts to empty state (without processing)
+                    applyEmptyState(false);
+                    renderEventLog([], false);
+                    // Hide snapshot button
+                    if (snapshotBtn) snapshotBtn.classList.add('hidden');
+                    // Reset counters to 0
+                    document.getElementById('stat-total').innerText = '0';
+                    document.getElementById('stat-hats').innerText = '0';
+                    document.getElementById('stat-vests').innerText = '0';
+                } else {
+                    console.error('Reset failed');
+                }
+            } catch (err) {
+                console.error('Reset error:', err);
+            }
+        });
+    }
+
+    // Form Processing
     if (uploadForm) {
         uploadForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const file = fileInput.files[0];
             if (!file || !validateAndSetFile(file)) return;
 
-            // Step 1: Hide Upload Zone, Show Processing Spinner
+            // Show processing loader, hide upload zone
             uploadZone.classList.add('hidden');
-            if (loaderZone) loaderZone.classList.remove('hidden');
+            loaderZone.classList.remove('hidden');
+
+            // Update overlays to "Processing..."
+            applyEmptyState(true);
+            renderEventLog([], true); // show Processing in log
 
             const formData = new FormData();
             formData.append('video_file', file);
@@ -270,32 +419,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 const result = await response.json();
 
                 if (response.ok && result.status === 'success') {
-                    // Step 2: Hide Loader, Display Processed Video Player
-                    if (loaderZone) loaderZone.classList.add('hidden');
+                    // Hide loader, show video
+                    loaderZone.classList.add('hidden');
                     activeStreamZone.classList.remove('hidden');
                     if (resetUploadBtn) resetUploadBtn.classList.remove('hidden');
 
-                    // Step 3: Load Output Video (Dynamic Replacement & Direct Source Assignment)
                     processedVideoPlayer.pause();
-                    
-                    // Clear old sources to prevent caching or sync issues
                     while (processedVideoPlayer.firstChild) {
                         processedVideoPlayer.removeChild(processedVideoPlayer.firstChild);
                     }
-
-                    // Assign source directly to the video element and recreate the source node
                     processedVideoPlayer.src = result.video_url;
-                    
                     const newSource = document.createElement('source');
                     newSource.id = 'video-source';
                     newSource.src = result.video_url;
                     newSource.type = 'video/mp4';
                     processedVideoPlayer.appendChild(newSource);
-
                     processedVideoPlayer.load();
 
-                    // Step 4: Render Charts & KPI Stats from JSON Response
-                    updateDashboardUI(result);
+                    // Update dashboard with real data
+                    window.updateDashboardUI(result);
                 } else {
                     alert(result.error || 'Pipeline processing failed.');
                     resetUploadUI();
@@ -308,27 +450,30 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Reset UI to Process Another Video
-    if (resetUploadBtn) {
-        resetUploadBtn.addEventListener('click', resetUploadUI);
-    }
-
     function resetUploadUI() {
         uploadZone.classList.remove('hidden');
-        if (loaderZone) loaderZone.classList.add('hidden');
+        loaderZone.classList.add('hidden');
         activeStreamZone.classList.add('hidden');
         if (resetUploadBtn) resetUploadBtn.classList.add('hidden');
-        
-        // Reset inputs
+        if (snapshotBtn) snapshotBtn.classList.add('hidden');
+
         fileInput.value = '';
         fileNameDisplay.innerText = '';
         processBtn.disabled = true;
-        
-        // Pause and clear video source
+
         processedVideoPlayer.pause();
         processedVideoPlayer.src = '';
         while (processedVideoPlayer.firstChild) {
             processedVideoPlayer.removeChild(processedVideoPlayer.firstChild);
         }
+
+        // Reset overlays to "No data..."
+        applyEmptyState(false);
+        renderEventLog([], false);
+        // Reset counters to 0
+        document.getElementById('stat-total').innerText = '0';
+        document.getElementById('stat-hats').innerText = '0';
+        document.getElementById('stat-vests').innerText = '0';
     }
-});
+
+}); // end DOMContentLoaded

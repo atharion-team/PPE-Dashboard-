@@ -118,8 +118,8 @@ def upload_video():
             # 3. Gather statistics and events
             by_violation = compliance_summary.get('by_violation', {})
             total_events = compliance_summary.get('events', 0)
-            missing_hats = by_violation.get('hat', 0) + by_violation.get('helmet', 0)
-            missing_vests = by_violation.get('vest', 0)
+            missing_hats = by_violation.get('no_hardhat', 0)
+            missing_vests = by_violation.get('no_vest', 0)
 
             # Load events from events.jsonl
             events_path = os.path.join(compliance_output, 'events.jsonl')
@@ -168,6 +168,21 @@ def upload_video():
                         shutil.copy2(src, dst)
 
             # 5. Return response
+            timeline_data = []
+            if events:
+                import math
+                interval = 5  # seconds
+                buckets = {}
+                for e in events:
+                    bucket = math.floor(e['start'] / interval) * interval
+                    buckets[bucket] = buckets.get(bucket, 0) + 1
+                for t in sorted(buckets.keys()):
+                    timeline_data.append({
+                        'time': f"{int(t//60):02d}:{int(t%60):02d}",
+                        'count': buckets[t]
+                    })
+            # --- END ADD ---
+
             return jsonify({
                 'status': 'success',
                 'video_url': '/static/outputs/processed_source_video.mp4',
@@ -176,6 +191,7 @@ def upload_video():
                     'missing_hats': missing_hats,
                     'missing_vests': missing_vests
                 },
+                'timeline_data': timeline_data,   # <--- ADD THIS LINE
                 'events': events
             })
 
@@ -187,6 +203,40 @@ def upload_video():
         import traceback
         logging.error(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
+
+@app.route('/reset', methods=['POST'])
+def reset():
+    """Delete processed video and all snapshots."""
+    try:
+        # Delete processed video
+        video_path = os.path.join(app.config['OUTPUT_FOLDER'], 'processed_source_video.mp4')
+        if os.path.exists(video_path):
+            os.remove(video_path)
+
+        # Delete all snapshots
+        snap_folder = app.config['SNAPSHOT_FOLDER']
+        if os.path.exists(snap_folder):
+            for f in os.listdir(snap_folder):
+                file_path = os.path.join(snap_folder, f)
+                if os.path.isfile(file_path):
+                    os.remove(file_path)
+
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logging.error(f"Reset error: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.route('/snapshots')
+def view_snapshots():
+    """Display a gallery of all snapshots."""
+    snap_folder = app.config['SNAPSHOT_FOLDER']
+    snapshots = []
+    if os.path.exists(snap_folder):
+        for f in sorted(os.listdir(snap_folder)):
+            if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp')):
+                snapshots.append(f)
+    return render_template('snapshots.html', snapshots=snapshots)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

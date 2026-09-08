@@ -14,29 +14,6 @@
 <body>
     <div class="app-layout">
 
-        <!-- SIDEBAR -->
-        <aside class="sidebar" id="sidebar">
-            <button id="toggle-btn" class="toggle-btn" type="button">
-                <i class="fa-solid fa-chevron-left" id="toggle-icon"></i>
-            </button>
-
-            <div class="logo-box">
-                <div class="logo-mark">A</div>
-                <h2 class="logo-text">THARION</h2>
-            </div>
-
-            <nav class="nav-menu">
-                <a href="/" class="nav-item active">
-                    <i class="fa-solid fa-house"></i>
-                    <span class="nav-text">Dashboard</span>
-                </a>
-                <a href="#" class="nav-item disabled">
-                    <i class="fa-solid fa-folder-open"></i>
-                    <span class="nav-text">Saved Files</span>
-                </a>
-            </nav>
-        </aside>
-
         <!-- MAIN CONTENT AREA -->
         <main class="main-body">
 
@@ -46,7 +23,8 @@
             </div>
 
             <header class="top-header">
-                <h1>Safety Observation</h1>
+                <h1>ATHARION - Safety Observation</h1>
+                <h3>PPE Compliance & Safety Violation Detection</h3>
             </header>
 
             <!-- MIDDLE GRID: VIDEO (LEFT) + 2 CARDS (RIGHT) -->
@@ -55,10 +33,10 @@
                 <!-- Video Container Card -->
                 <div class="card video-card upload-card-container" id="video-card">
                     <div class="card-title-bar">
-                        <span id="video-card-title">Upload Video Stream</span>
-                        <!-- New Reset Button when video is finished -->
+                        <span id="video-card-title">Video Stream</span>
+                        <!-- Reset Button with X icon -->
                         <button id="reset-upload-btn" class="reset-btn hidden" type="button">
-                            <i class="fa-solid fa-rotate-left"></i> New Video
+                            <i class="fa-solid fa-xmark"></i> New Video
                         </button>
                     </div>
 
@@ -69,30 +47,34 @@
                                 accept="video/mp4,video/x-m4v,video/*" hidden>
 
                             <div class="drop-area" id="drop-area">
-                                <i class="fa-solid fa-file-video upload-icon"></i>
+                                <i data-lucide="cloud-upload" class="upload-icon"></i>
                                 <p class="drop-text">Drag video file here to upload.</p>
                                 <p class="sub-drop-text">Alternatively, you can select a file by <span
                                         class="browse-link" id="browse-btn">clicking here</span></p>
                                 <span id="selected-file-name" class="selected-file-name"></span>
+                                <span id="upload-error" class="upload-error-msg"></span>
                             </div>
 
                             <div class="upload-actions">
-                                <span id="upload-error" class="upload-error-msg"></span>
                                 <button type="submit" id="process-btn" class="process-btn" disabled>Process</button>
                             </div>
                         </form>
                     </div>
 
-                    <!-- State 2: Processing / Loading Indicator -->
+                    <!-- State 2: Processing / Loading Indicator (new design) -->
                     <div id="processing-loader-zone" class="processing-zone hidden">
-                        <i class="fa-solid fa-spinner fa-spin loader-icon"></i>
-                        <p class="processing-title">Running Compliance & PPE Pipeline...</p>
-                        <p class="processing-subtext">Tracking subjects, blurring facial features, and analyzing safety violations.</p>
+                        <span class="processing-text">
+                            Running Compliance &amp; PPE Pipeline
+                            <span class="dots">
+                                <span>.</span><span>.</span><span>.</span>
+                            </span>
+                        </span>
                     </div>
 
                     <!-- State 3: Processed Video Player (H.264 MP4 Output) -->
                     <div id="active-stream-zone" class="video-frame-wrapper hidden">
-                        <video id="processed-video-player" controls preload="metadata" style="width: 100%; height: auto; display: block; border-radius: 6px;">
+                        <video id="processed-video-player" controls preload="metadata"
+                            style="width: 100%; height: auto; display: block; border-radius: 6px;">
                             <source id="video-source" src="" type="video/mp4">
                             Your browser does not support HTML5 video playback.
                         </video>
@@ -133,6 +115,10 @@
                     <div class="card log-card">
                         <div class="card-header-sm">
                             <h3>Recent Detections</h3>
+                            <!-- Snapshot Gallery Button (hidden initially) -->
+                            <button id="snapshot-gallery-btn" class="snapshot-btn hidden" type="button" title="View Snapshots">
+                                <i class="fa-regular fa-images"></i>
+                            </button>
                         </div>
                         <div class="event-list" id="event-list">
                             <!-- Populated dynamically by JavaScript -->
@@ -143,9 +129,9 @@
             </section>
 
             <!-- BOTTOM PANEL: TIMELINE CHART -->
-            <section class="card chart-card">
+            <section class="card chart-card ">
                 <h3>Alerts Timeline</h3>
-                <div class="chart-container">
+                <div class="chart-container" id="timeline-chart-container">
                     <canvas id="timelineChart"></canvas>
                     <div id="timeline-empty-overlay" class="chart-overlay-empty">
                         Waiting for detection timeline...
@@ -155,6 +141,10 @@
         </main>
     </div>
 
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
     <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
 
