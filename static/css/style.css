@@ -258,7 +258,6 @@ header h3 {
 
 .event-time {
     color: #8b949e;
-    font-family: monospace;
 }
 
 .event-desc {
@@ -645,6 +644,30 @@ header h3 {
     100% { opacity: 0; }
 }
 
+.processing-overlay-text {
+    font-size: 24px;
+    font-weight: 600;
+    color: #b0b0b0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.processing-overlay-text .dots span {
+    font-size: 36px;   /* bigger dots */
+    line-height: 1;
+    animation: blink 1.4s infinite both;
+    display: inline-block;
+}
+.processing-overlay-text .dots span:nth-child(1) { animation-delay: 0s; }
+.processing-overlay-text .dots span:nth-child(2) { animation-delay: 0.2s; }
+.processing-overlay-text .dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes blink {
+    0%, 20% { opacity: 0; }
+    40% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 /* Log overlay */
 .log-empty-overlay {
     position: absolute;
@@ -657,6 +680,18 @@ header h3 {
     color: #b0b0b0;
     font-size: 15px;
     font-weight: 600;
+    text-align: center;
+    pointer-events: none;
+}
+
+.log-processing-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(24, 24, 24, 0.6);
+    padding: 10px 16px;
+    border-radius: 6px;
     text-align: center;
     pointer-events: none;
 }

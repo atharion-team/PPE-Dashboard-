@@ -28,12 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
             responsive: true,
             maintainAspectRatio: false,
             scales: {
-                x: { 
+                x: {
                     grid: { color: '#21262d' },
                     ticks: { color: '#8b949e' }
                 },
-                y: { 
-                    beginAtZero: true, 
+                y: {
+                    beginAtZero: true,
                     grid: { color: '#21262d' },
                     ticks: { color: '#8b949e', stepSize: 1 }
                 }
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Donut chart created');
 
     // ==========================================
-    // 2. Apply empty-state styling & overlays
+    // 2. Apply empty-state styling & overlays (also resets charts)
     // ==========================================
 
     function applyEmptyState(processing = false) {
@@ -83,34 +83,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const donutOverlay = document.getElementById('donut-empty-overlay');
         const timelineOverlay = document.getElementById('timeline-empty-overlay');
 
-        // Always add no-data class (grey/blur) when empty or processing
+        // Always apply grey/blur class
         if (donutWrapper) donutWrapper.classList.add('no-data');
         if (timelineWrapper) timelineWrapper.classList.add('no-data');
 
+        // Reset chart data to grey placeholders if not processing
+        if (!processing) {
+            // Donut: 3 grey slices
+            violationPieChart.data.datasets[0].data = [70, 20, 10];
+            violationPieChart.data.datasets[0].backgroundColor = ['#666666', '#777777', '#888888'];
+            violationPieChart.data.datasets[0].borderColor = ['#444444', '#444444', '#444444'];
+            violationPieChart.options.plugins.tooltip.enabled = false;
+            violationPieChart.options.hover.mode = null;
+            violationPieChart.update('none');
+
+            // Timeline: grey fake data
+            timelineChart.data.labels = ['10:00', '10:01', '10:02', '10:03', '10:04'];
+            timelineChart.data.datasets[0].data = [2, 3, 1, 4, 2];
+            timelineChart.data.datasets[0].borderColor = '#999999';
+            timelineChart.data.datasets[0].backgroundColor = 'rgba(150,150,150,0.2)';
+            timelineChart.data.datasets[0].pointBackgroundColor = '#999999';
+            timelineChart.options.plugins.tooltip.enabled = false;
+            timelineChart.options.hover.mode = null;
+            timelineChart.update('none');
+        }
+
+        // Overlay text
         const msg = processing ? 'Processing' : 'No data to display. Upload a video to start.';
+        const overlayHtml = processing
+            ? `<span class="processing-overlay-text">Processing<span class="dots"><span>	•</span><span>	•</span><span>	•</span></span></span>`
+            : msg;
 
         if (donutOverlay) {
             donutOverlay.style.display = 'block';
-            donutOverlay.innerHTML = processing
-                ? `Processing<span class="dots" style="display:inline;font-size:inherit;"><span>.</span><span>.</span><span>.</span></span>`
-                : msg;
+            donutOverlay.innerHTML = overlayHtml;
         }
         if (timelineOverlay) {
             timelineOverlay.style.display = 'block';
-            timelineOverlay.innerHTML = processing
-                ? `Processing<span class="dots" style="display:inline;font-size:inherit;"><span>.</span><span>.</span><span>.</span></span>`
-                : msg;
+            timelineOverlay.innerHTML = overlayHtml;
         }
     }
 
-    // Initial empty state (not processing)
+    // Initial empty state (not processing) – immediately after charts created
     applyEmptyState(false);
+    renderEventLog([], false);  // defined later but hoisted
 
     // ==========================================
     // 3. UI Update Function (called when real data arrives)
     // ==========================================
 
-    window.updateDashboardUI = function(data) {
+    window.updateDashboardUI = function (data) {
         console.log('updateDashboardUI called with data:', data);
         const stats = data.stats || {};
         const totalViolations = stats.total_violations || 0;
@@ -143,6 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const donutWrapper = document.querySelector('.donut-chart-wrapper');
         const donutOverlay = document.getElementById('donut-empty-overlay');
         if (totalViolations === 0) {
+            // Keep grey empty state
             violationPieChart.data.datasets[0].data = [70, 20, 10];
             violationPieChart.data.datasets[0].backgroundColor = ['#666666', '#777777', '#888888'];
             violationPieChart.data.datasets[0].borderColor = ['#444444', '#444444', '#444444'];
@@ -178,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (timelineOverlay) timelineOverlay.style.display = 'none';
             if (timelineWrapper) timelineWrapper.classList.remove('no-data');
         } else {
+            // Keep grey demo data
             timelineChart.data.labels = ['10:00', '10:01', '10:02', '10:03', '10:04'];
             timelineChart.data.datasets[0].data = [2, 3, 1, 4, 2];
             timelineChart.data.datasets[0].borderColor = '#999999';
@@ -206,30 +230,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (processing) {
             eventList.innerHTML = `
-                <div class="placeholder-log" style="display: flex; align-items: center; justify-content: center; height: 100%; min-height: 120px;">
-                    <span class="processing-text" style="font-size: 20px; color: #b0b0b0;">
-                        Processing
-                        <span class="dots"><span>.</span><span>.</span><span>.</span></span>
-                    </span>
+                <div style="position: relative; width: 100%; height: 100%; min-height: 120px;">
+                    <div class="log-processing-overlay">
+                        <span class="processing-overlay-text">Processing<span class="dots"><span>	•</span><span>	•</span><span>	•</span></span></span>
+                    </div>
                 </div>
             `;
             return;
         }
 
         if (!events || events.length === 0) {
-            // Show placeholder items with overlay message
             eventList.innerHTML = `
                 <div class="placeholder-log" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                     <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
-                        <span class="event-time" style="color: #666; font-family: monospace;">--:--</span>
+                        <span class="event-time" style="color: #666;>--:--</span>
                         <span class="event-desc" style="color: #888;">Sample detection</span>
                     </div>
                     <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
-                        <span class="event-time" style="color: #666; font-family: monospace;">--:--</span>
+                        <span class="event-time" style="color: #666;>--:--</span>
                         <span class="event-desc" style="color: #888;">Sample detection</span>
                     </div>
                     <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
-                        <span class="event-time" style="color: #666; font-family: monospace;">--:--</span>
+                        <span class="event-time" style="color: #666;>--:--</span>
                         <span class="event-desc" style="color: #888;">Sample detection</span>
                     </div>
                     <div class="log-empty-overlay">No data to display. Upload a video to start.</div>
@@ -467,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processedVideoPlayer.removeChild(processedVideoPlayer.firstChild);
         }
 
-        // Reset overlays to "No data..."
+        // Reset overlays to "No data..." and reset chart data
         applyEmptyState(false);
         renderEventLog([], false);
         // Reset counters to 0
