@@ -40,6 +40,7 @@ if str(REPO_ROOT) not in sys.path:  # allows `python pipeline/compliance.py` dir
     sys.path.insert(0, str(REPO_ROOT))
 
 from pipeline.detect import load_ppe_vocabulary  # noqa: E402
+from privacy_guard import blur_facial_features  # noqa: E402
 
 DEFAULT_VOCAB = REPO_ROOT / "data" / "vocabulary.yaml"
 DEFAULT_OUTPUT = REPO_ROOT / "runs" / "compliance"
@@ -79,13 +80,24 @@ def resolve_known_classes(summary: dict, ordered: list[dict], violation_of: dict
 
 
 def save_snapshot(capture: cv2.VideoCapture, timestamp: float, out_path: Path) -> bool:
-    """Grab the frame nearest timestamp seconds into an already-open capture and write it to out_path as a JPEG. """
+    """Grab the frame nearest timestamp seconds into an already-open capture,
+    anonymize faces via privacy_guard, and write it to out_path as a JPEG.
+
+    The unblurred frame is never written to disk – blur_facial_features writes
+    directly to out_path, so any file that lands there is already anonymized.
+    Returns False on any failure so the event simply gets no snapshot."""
     capture.set(cv2.CAP_PROP_POS_MSEC, timestamp * 1000)
     ok, frame = capture.read()
     if not ok:
         return False
+
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    return bool(cv2.imwrite(str(out_path), frame))
+    try:
+        blur_facial_features(frame, output_path=str(out_path))
+        return True
+    except Exception as e:
+        print(f"warning: privacy guard failed for {out_path}: {e}")
+        return False
 
 
 def load_records(path: Path) -> dict[int, dict]:

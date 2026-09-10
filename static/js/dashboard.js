@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Overlay text
         const msg = processing ? 'Processing' : 'No data to display. Upload a video to start.';
         const overlayHtml = processing
-            ? `<span class="processing-overlay-text">Processing<span class="dots"><span>	•</span><span>	•</span><span>	•</span></span></span>`
+            ? `<span class="processing-overlay-text">Processing<span class="dots"><span>.</span><span>.</span><span>.</span></span></span>`
             : msg;
 
         if (donutOverlay) {
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial empty state (not processing) – immediately after charts created
     applyEmptyState(false);
-    renderEventLog([], false);  // defined later but hoisted
+    renderEventLog([], false);
 
     // ==========================================
     // 3. UI Update Function (called when real data arrives)
@@ -145,10 +145,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('stat-total').innerText = totalViolations;
         document.getElementById('stat-hats').innerText = missingHats;
         document.getElementById('stat-vests').innerText = missingVests;
-
-        if (totalViolations > 0) {
-            triggerAlertToast();
-        }
 
         // Show/hide snapshot button based on events having snapshots
         const snapshotBtn = document.getElementById('snapshot-gallery-btn');
@@ -221,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ==========================================
-    // 4. Render Event Log & Toast
+    // 4. Render Event Log
     // ==========================================
 
     function renderEventLog(events, processing = false) {
@@ -230,9 +226,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (processing) {
             eventList.innerHTML = `
-                <div style="position: relative; width: 100%; height: 100%; min-height: 120px;">
+                <div class="log-placeholder-wrapper placeholder-log">
+                    <div class="log-placeholder-items">
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-desc">Sample detection</span>
+                        </div>
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-desc">Sample detection</span>
+                        </div>
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-desc">Sample detection</span>
+                        </div>
+                    </div>
                     <div class="log-processing-overlay">
-                        <span class="processing-overlay-text">Processing<span class="dots"><span>	•</span><span>	•</span><span>	•</span></span></span>
+                        <span class="processing-overlay-text">Processing<span class="dots"><span>.</span><span>.</span><span>.</span></span></span>
                     </div>
                 </div>
             `;
@@ -241,18 +251,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!events || events.length === 0) {
             eventList.innerHTML = `
-                <div class="placeholder-log" style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
-                    <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
-                        <span class="event-time" style="color: #666;>--:--</span>
-                        <span class="event-desc" style="color: #888;">Sample detection</span>
-                    </div>
-                    <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
-                        <span class="event-time" style="color: #666;>--:--</span>
-                        <span class="event-desc" style="color: #888;">Sample detection</span>
-                    </div>
-                    <div class="event-item" style="display: flex; flex-direction: row-reverse; justify-content: space-between; background: #1a1a1a; padding: 8px 10px; border-radius: 6px; font-size: 12px; border-left: 3px solid #777;">
-                        <span class="event-time" style="color: #666;>--:--</span>
-                        <span class="event-desc" style="color: #888;">Sample detection</span>
+                <div class="log-placeholder-wrapper placeholder-log">
+                    <div class="log-placeholder-items">
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-desc">Sample detection</span>
+                        </div>
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-desc">Sample detection</span>
+                        </div>
+                        <div class="event-item">
+                            <span class="event-time">--:--</span>
+                            <span class="event-desc">Sample detection</span>
+                        </div>
                     </div>
                     <div class="log-empty-overlay">No data to display. Upload a video to start.</div>
                 </div>
@@ -262,45 +274,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Real events – render normally
         eventList.innerHTML = events.map(event => `
-            <div class="event-item ${event.type || 'warning'}" style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
-                ${event.snapshot ? `<img src="${event.snapshot}" alt="Snapshot" style="width: 64px; height: 48px; object-fit: cover; border-radius: 4px; border: 1px solid #333;" />` : ''}
-                <div style="display: flex; flex-direction: column;">
-                    <span class="event-time" style="font-size: 0.8rem; color: #8b949e;">Event #${event.event_id || ''} at ${event.time}</span>
-                    <span class="event-desc" style="font-weight: 600;">${event.desc}</span>
+            <div class="event-item real ${event.type || 'warning'}">
+                ${event.snapshot ? `<img src="${event.snapshot}" alt="Snapshot" class="event-snapshot-img" />` : ''}
+                <div class="event-detail">
+                    <span class="event-time">Event #${event.event_id || ''} at ${event.time}</span>
+                    <span class="event-desc">${event.desc}</span>
                 </div>
             </div>
         `).join('');
     }
 
-    function triggerAlertToast() {
-        const toast = document.getElementById('alert-toast');
-        if (toast) {
-            toast.classList.remove('hidden');
-            setTimeout(() => { toast.classList.add('hidden'); }, 3500);
-        }
-    }
-
     // ==========================================
     // 5. Event Listeners & Drag-Drop
     // ==========================================
-
-    // Sidebar Toggle
-    const sidebar = document.getElementById('sidebar');
-    const toggleBtn = document.getElementById('toggle-btn');
-    const toggleIcon = document.getElementById('toggle-icon');
-
-    if (toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            if (sidebar.classList.contains('collapsed')) {
-                toggleIcon.classList.remove('fa-chevron-left');
-                toggleIcon.classList.add('fa-chevron-right');
-            } else {
-                toggleIcon.classList.remove('fa-chevron-right');
-                toggleIcon.classList.add('fa-chevron-left');
-            }
-        });
-    }
 
     // Upload Elements
     const dropArea = document.getElementById('drop-area');
@@ -382,10 +368,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Snapshot gallery button – open new tab with snapshots page
+    // Snapshot gallery button – download ZIP
     if (snapshotBtn) {
         snapshotBtn.addEventListener('click', () => {
-            window.open('/snapshots', '_blank');
+            // Trigger download of the snapshots ZIP
+            window.location.href = '/download_snapshots';
         });
     }
 

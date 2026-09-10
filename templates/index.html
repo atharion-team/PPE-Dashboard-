@@ -17,11 +17,6 @@
         <!-- MAIN CONTENT AREA -->
         <main class="main-body">
 
-            <!-- POP-UP ALERT TOAST (Top Right) -->
-            <div id="alert-toast" class="toast-popup hidden">
-                <strong>Event Captured</strong>
-            </div>
-
             <header class="top-header">
                 <h1>ATHARION - Safety Observation</h1>
                 <h3>PPE Compliance & Safety Violation Detection</h3>
@@ -36,7 +31,7 @@
                         <span id="video-card-title">Video Stream</span>
                         <!-- Reset Button with X icon -->
                         <button id="reset-upload-btn" class="reset-btn hidden" type="button">
-                            <i class="fa-solid fa-xmark"></i> New Video
+                            <i data-lucide="rotate-ccw"></i>
                         </button>
                     </div>
 
@@ -61,20 +56,19 @@
                         </form>
                     </div>
 
-                    <!-- State 2: Processing / Loading Indicator (new design) -->
+                    <!-- State 2: Processing / Loading Indicator -->
                     <div id="processing-loader-zone" class="processing-zone hidden">
                         <span class="processing-text">
                             Running Compliance &amp; PPE Pipeline
                             <span class="dots">
-                                <span>	•</span><span>	•</span><span>	•</span>
+                                <span>.</span><span>.</span><span>.</span>
                             </span>
                         </span>
                     </div>
 
                     <!-- State 3: Processed Video Player (H.264 MP4 Output) -->
                     <div id="active-stream-zone" class="video-frame-wrapper hidden">
-                        <video id="processed-video-player" controls preload="metadata"
-                            style="width: 100%; height: auto; display: block; border-radius: 6px;">
+                        <video id="processed-video-player" controls preload="metadata">
                             <source id="video-source" src="" type="video/mp4">
                             Your browser does not support HTML5 video playback.
                         </video>
@@ -116,8 +110,9 @@
                         <div class="card-header-sm">
                             <h3>Recent Detections</h3>
                             <!-- Snapshot Gallery Button (hidden initially) -->
-                            <button id="snapshot-gallery-btn" class="snapshot-btn hidden" type="button" title="View Snapshots">
-                                <i class="fa-regular fa-images"></i>
+                            <button id="snapshot-gallery-btn" class="snapshot-btn hidden" type="button"
+                                title="Download Snapshots">
+                                <i data-lucide="download"></i>
                             </button>
                         </div>
                         <div class="event-list" id="event-list">

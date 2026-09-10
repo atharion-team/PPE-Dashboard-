@@ -4,26 +4,43 @@ import numpy as np
 from datetime import datetime
 from insightface.app import FaceAnalysis
 
-# Initialize RetinaFace detection model once on CPU
-app = FaceAnalysis(allowed_modules=['detection'], providers=['CPUExecutionProvider'])
-app.prepare(ctx_id=0, det_size=(640, 640))
+# Lazy singleton – the model is heavy, so don't load it at import time
+_face_app = None
+
+
+def _get_face_app() -> FaceAnalysis:
+    """Return a singleton FaceAnalysis instance, initializing on first use."""
+    global _face_app
+    if _face_app is None:
+        _face_app = FaceAnalysis(
+            allowed_modules=['detection'],
+            providers=['CPUExecutionProvider'],
+        )
+        _face_app.prepare(ctx_id=0, det_size=(640, 640))
+    return _face_app
+
 
 def blur_facial_features(
-    input_image, 
-    output_dir: str = "./anonymized_snaps", 
-    blur_intensity: int = 55
+    input_image,
+    output_dir: str = "./anonymized_snaps",
+    blur_intensity: int = 55,
+    output_path: str = None,
 ) -> str:
     """
-    Receives an image (OpenCV frame or file path), blurs all facial features, 
-    and saves ONLY the anonymized image with a timestamped filename (DD-MM-YYYY_HH-MM-SS.jpg).
-    
+    Receives an image (OpenCV frame or file path), blurs all facial features,
+    and saves ONLY the anonymized image.
+
     Parameters:
-      - input_image: Raw OpenCV image frame (np.ndarray) OR file path (str).
-      - output_dir: Destination folder for anonymized snapshots.
+      - input_image:    Raw OpenCV image frame (np.ndarray) OR file path (str).
+      - output_dir:     Destination folder for anonymized snapshots (used only
+                        when output_path is not provided).
       - blur_intensity: Kernel size for Gaussian blur.
-      
+      - output_path:    If given, the anonymized image is written to this exact
+                        path (parent dirs are created). If omitted, a
+                        timestamped filename is generated inside output_dir.
+
     Returns:
-      - str: File path of the saved anonymized image.
+      - str: File path of the saved anonymized image, or "" on failure.
     """
     # 1. Handle Input Type (Path string vs Raw OpenCV Frame)
     if isinstance(input_image, str):
@@ -42,35 +59,49 @@ def blur_facial_features(
     # 2. Fast Scaling Pass for High-Precision Detection
     target_size = 640
     scale = target_size / float(max(h, w)) if max(h, w) > target_size else 1.0
-    detect_img = cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_LINEAR) if scale != 1.0 else img
+    detect_img = (
+        cv2.resize(img, (int(w * scale), int(h * scale)), interpolation=cv2.INTER_LINEAR)
+        if scale != 1.0 else img
+    )
 
     # 3. Detect Facial Features
-    faces = app.get(detect_img)
-    ksize = (blur_intensity, blur_intensity) if blur_intensity % 2 != 0 else (blur_intensity + 1, blur_intensity + 1)
+    faces = _get_face_app().get(detect_img)
+    ksize = (
+        (blur_intensity, blur_intensity)
+        if blur_intensity % 2 != 0
+        else (blur_intensity + 1, blur_intensity + 1)
+    )
 
     # 4. Apply Blur strictly on Feature Areas (Eyes, Nose, Mouth)
     for face in faces:
         landmarks = face.kps / scale
         fx, fy = landmarks[:, 0], landmarks[:, 1]
-        
+
         f_x1, f_y1 = int(min(fx)), int(min(fy))
         f_x2, f_y2 = int(max(fx)), int(max(fy))
-        
+
         margin_w = int((f_x2 - f_x1) * 0.20)
         margin_h = int((f_y2 - f_y1) * 0.25)
-        
+
         f_x1, f_y1 = max(0, f_x1 - margin_w), max(0, f_y1 - margin_h)
         f_x2, f_y2 = min(w, f_x2 + margin_w), min(h, f_y2 + margin_h)
-        
+
         if f_x2 > f_x1 and f_y2 > f_y1:
             roi = img[f_y1:f_y2, f_x1:f_x2]
             if roi.size > 0:
                 img[f_y1:f_y2, f_x1:f_x2] = cv2.GaussianBlur(roi, ksize, 30)
 
-    # 5. Generate Timestamped Destination Path (DD-MM-YYYY_HH-MM-SS.jpg)
-    os.makedirs(output_dir, exist_ok=True)
-    timestamp_str = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-    final_output_path = os.path.join(output_dir, f"snap_{timestamp_str}.jpg")
+    # 5. Resolve Destination Path
+    if output_path:
+        # Caller-supplied path wins – preserves filenames, no timestamp.
+        parent = os.path.dirname(output_path)
+        if parent:
+            os.makedirs(parent, exist_ok=True)
+        final_output_path = output_path
+    else:
+        os.makedirs(output_dir, exist_ok=True)
+        timestamp_str = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+        final_output_path = os.path.join(output_dir, f"snap_{timestamp_str}.jpg")
 
     # 6. Save ONLY the Anonymized Image
     cv2.imwrite(final_output_path, img)
