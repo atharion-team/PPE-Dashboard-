@@ -112,7 +112,7 @@ def upload_video():
                 output=associate_output,
                 show=False,
                 device='cpu',
-                conf=0.15,
+                conf=0.35,
                 iou=0.45,
                 imgsz=640
             )
