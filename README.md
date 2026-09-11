@@ -1,6 +1,6 @@
 # Atharion PPE Dashboard
 
-Detects PPE violations (missing hardhat, missing vest) in videos and shows results in a web dashboard.
+A safety-observation system that detects PPE violations (missing hardhat, missing vest) in videos and presents the results in a live web dashboard.
 
 Team (Capstone Project):
 - Abrar Fahad Alnwybt
@@ -8,6 +8,27 @@ Team (Capstone Project):
 - Rayan Saleh
 - Dalal Bin Homed
 - Njood Aldahlawi
+
+---
+
+## About
+
+This dashboard is part of a larger PPE-compliance pipeline built by the Atharion team.
+
+What the system does:
+
+1. Upload a video of a construction or industrial site.
+2. The pipeline detects people and PPE items in every frame.
+3. It tracks each person across frames and binds PPE boxes to the correct worker.
+4. A compliance layer converts per-frame detections into deduplicated violation events
+   (missing hardhat, missing vest) with start and end times.
+5. The dashboard shows an annotated video, a violation donut, a timeline chart, and
+   a log of detections with anonymized snapshots.
+
+Faces in snapshots are blurred automatically, so no personal identity is stored.
+
+Other components of the project (detection, tracking, compliance, docs, notebooks)
+are on the same organization page: https://github.com/atharion-team
 
 ---
 
@@ -252,5 +273,8 @@ This work is done by the team of Atharion:
 - Rayan Saleh
 - Dalal Bin Homed
 - Njood Aldahlawi
+
+Other components of the project (detection, tracking, compliance, docs, notebooks)
+are on the same organization page: https://github.com/atharion-team
 
 For the Capstone Project.
