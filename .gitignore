@@ -1,3 +1,6 @@
+# Save the new content to .gitignore
+@'
+# --- Training artifacts ---
 runs/
 datasets/
 images/
@@ -10,51 +13,46 @@ labels/
 *.zip
 *.tar.gz
 
+# --- App runtime outputs ---
 static/uploads/*
 static/outputs/*
 static/snapshots/*
 !static/uploads/.gitkeep
 !static/outputs/.gitkeep
 !static/snapshots/.gitkeep
+uploads/
 
+# --- Demo outputs ---
+examples/**/snapshots/
+examples/**/events.jsonl
+examples/**/compliance_summary.json
+examples/offline-dashboard-demo/*.mp4
+
+# --- Keep sample videos in example/ ---
+!example/**/*.mp4
+!example/**/*.mov
+!example/**/*.webm
+!example/*.mp4
+
+# --- Python ---
 __pycache__/
 *.py[cod]
+*.pyo
 .venv/
 venv/
 env/
 .env
 .env.*
-.DS_Store
-.idea/
-.vscode/
-*.log
-
-!example/**/*.mp4
-!example/**/*.mov
-!example/**/*.webm
-
-uploads/
-examples/offline-dashboard-demo/*.mp4
-*.pt
-!example/*.mp4
-
-.env
 .env.local
-.env.*.local
+!.env.example
 
-# Python bytecode
-__pycache__/
-*.pyc
-*.pyo
-
-# Editor
+# --- Editor / OS ---
 .vscode/
+.idea/
+.DS_Store
+*.log
+'@ | Set-Content .gitignore
 
-# Demo outputs
-examples/**/snapshots/
-examples/**/events.jsonl
-examples/**/compliance_summary.json
-
-# Model weights
-*.pt
-yolo26n.pt
+git add .gitignore
+git commit -m "chore: clean up .gitignore duplicates"
+git push origin main
