@@ -72,8 +72,8 @@ If any package fails, install it manually and try again.
 
 These files must exist in the repo before anything runs:
 
-    data/vocabulary.yaml              # PPE classes, zones, thresholds
-    data/css-data.yaml                # training config (dataset paths, class names)
+    data/vocabulary.yaml                   # PPE classes, zones, thresholds
+    data/css-data.yaml                     # training config (dataset paths, class names)
     pipeline/trackers/bytetrack_ppe.yaml   # tracker config
 
 If any of them are missing, ask the team for a copy.
@@ -183,25 +183,31 @@ Open your browser and go to:
     pipeline/track.py               Tracks persons across frames
     pipeline/associate.py           Binds PPE boxes to tracked persons
     pipeline/compliance.py          Turns associations into violation events
-    pipeline/trackers/              ByteTrack config
+    pipeline/trackers/              ByteTrack and BoT-SORT configs
     data/vocabulary.yaml            Classes, zones, thresholds
     data/css-data.yaml              Dataset config for training
     privacy_guard.py                Blurs faces in snapshots
     templates/                      HTML pages
-    static/                         CSS, JS, uploads, outputs, snapshots
+    static/                         CSS, JS, fonts, uploads, outputs, snapshots
+    docs/                           Design docs and pipeline explanations
+    notebooks/                      Starter notebooks for environment + training
+    docker/                         Optional Docker configs for docs
+    example/PPE.mp4                 Sample video for testing
+    examples/                       Example outputs (JSON + snapshots)
     runs/                           Training and pipeline outputs (not on GitHub)
     datasets/                       Your dataset (not on GitHub)
-    example/                        Sample video
+    .env.example                    Template for your .env file
+    requirements.txt                Python dependencies
 
 ---
 
 ## Pipeline Order
 
-If you ever want to run everything by hand instead of through the dashboard:
+If you want to run everything by hand instead of through the dashboard:
 
-    python pipeline/track.py --weights runs/train/ppe_model/weights/best.pt --source example/video.mp4
-    python pipeline/associate.py --weights runs/train/ppe_model/weights/best.pt --source example/video.mp4
-    python pipeline/compliance.py --associations runs/associate/video/associations.jsonl
+    python pipeline/track.py --weights runs/train/ppe_model/weights/best.pt --source example/PPE.mp4
+    python pipeline/associate.py --weights runs/train/ppe_model/weights/best.pt --source example/PPE.mp4
+    python pipeline/compliance.py --associations runs/associate/associations.jsonl
 
 The dashboard runs these for you in the right order.
 
@@ -226,7 +232,8 @@ Video does not play in the browser
 
 Dashboard shows no violations
     Check that the weights file is at runs/train/ppe_model/weights/best.pt.
-    Lower CONF_THRESHOLD in .env and retrain if detections are too weak.
+    If detections look too weak, edit the conf= value in app.py (currently 0.35)
+    and retrain with more epochs if needed.
 
 Out of memory while training
     Add --batch 4 to the train command.
