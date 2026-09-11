@@ -32,3 +32,8 @@ env/
 !example/**/*.mp4
 !example/**/*.mov
 !example/**/*.webm
+
+uploads/
+examples/offline-dashboard-demo/*.mp4
+*.pt
+!example/*.mp4
