@@ -9,9 +9,29 @@ ultralytics>=8.4.60     # YOLO26 checkpoints need this version or newer
 opencv-python>=4.9.0
 pyyaml>=6.0
 jupyter>=1.1.1
-pandas>=2.2             
-roboflow>=1.1           
+pandas>=2.2
+roboflow>=1.1
 wandb>=0.18             # optional, run tracking
 lap>=0.5.12             # ByteTrack association
 scipy>=1.13             # Hungarian matching
 imageio-ffmpeg>=0.5     # re-encode detect/track/associate output to H.264
+
+# Web app
+flask>=3.0
+werkzeug>=3.0
+python-dotenv>=1.0
+numpy>=1.26
+pillow>=10.0
+
+# Training extras (optional)
+tqdm>=4.66
+matplotlib>=3.8
+seaborn>=0.13
+
+insightface>=0.7.3
+onnxruntime>=1.17
+flask>=3.0
+werkzeug>=3.0
+python-dotenv>=1.0
+numpy>=1.26
+pillow>=10.0
