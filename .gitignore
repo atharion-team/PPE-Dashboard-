@@ -29,3 +29,7 @@ env/
 .idea/
 .vscode/
 *.log
+
+!example/**/*.mp4
+!example/**/*.mov
+!example/**/*.webm
