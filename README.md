@@ -27,8 +27,11 @@ What the system does:
 
 Faces in snapshots are blurred automatically, so no personal identity is stored.
 
-Other components of the project (detection, tracking, compliance, docs, notebooks)
-are on the same organization page: https://github.com/atharion-team
+The repo contains the full pipeline: dataset download, model training, evaluation,
+detection, tracking, association, compliance, and the web dashboard. Design docs
+and notebooks live under docs/ and notebooks/.
+
+More of the team's work is on the organization page: https://github.com/atharion-team
 
 ---
 
@@ -274,7 +277,9 @@ This work is done by the team of Atharion:
 - Dalal Bin Homed
 - Njood Aldahlawi
 
-Other components of the project (detection, tracking, compliance, docs, notebooks)
-are on the same organization page: https://github.com/atharion-team
+The work was split across the team, covering dataset collection, model development,
+model training, pipeline integration, the web dashboard, and supporting documentation.
+
+More of the team's work is on the organization page: https://github.com/atharion-team
 
 For the Capstone Project.
