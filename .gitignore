@@ -1,6 +1,5 @@
 runs/
 datasets/
-data/
 images/
 labels/
 *.pt
