@@ -37,3 +37,24 @@ uploads/
 examples/offline-dashboard-demo/*.mp4
 *.pt
 !example/*.mp4
+
+.env
+.env.local
+.env.*.local
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor
+.vscode/
+
+# Demo outputs
+examples/**/snapshots/
+examples/**/events.jsonl
+examples/**/compliance_summary.json
+
+# Model weights
+*.pt
+yolo26n.pt
