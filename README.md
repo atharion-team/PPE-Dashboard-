@@ -55,8 +55,8 @@ Close and reopen your terminal after installing.
 
 Open a terminal and run:
 
-    git clone https://github.com/atharion-team/PPE-Dashboard-.git
-    cd PPE-Dashboard-
+    git clone https://github.com/atharion-team/ppe-compliance-dashboard.git
+    cd ppe-compliance-dashboard
 
 ---
 
