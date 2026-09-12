@@ -1,4 +1,4 @@
-# Atharion PPE Dashboard
+# Atharion PPE Compliance Dashboard
 
 A safety-observation system that detects PPE violations (missing hardhat, missing vest) in videos and presents the results in a live web dashboard.
 
